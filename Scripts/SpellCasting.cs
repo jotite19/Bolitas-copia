@@ -21,10 +21,10 @@ public class SpellCasting : MonoBehaviour
             switch (DetectShape.correctShape)
             {
                 case 2.1f:
-                    playerMove.Fall(DetectShape.angleDiferencie);
+                    playerMove.Leap(DetectShape.angleDiferencie);
                     break;
                 case 2.2f:
-                    playerMove.Leap(DetectShape.angleDiferencie);
+                    playerMove.Fall(DetectShape.angleDiferencie);
                     break;
                 case 3.1f:
                     shooting.TriangleShooting();

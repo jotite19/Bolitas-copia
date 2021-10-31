@@ -14,22 +14,19 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] Transform playeBody;
     [SerializeField] Text massDisplay;
     [SerializeField] Text jumpDisplay;
-    RaycastHit slopeHit;
+    [SerializeField] Utils utils;
 
 
     [Header("Player Physics")]
     [SerializeField] float playerMass = 1f;
     [SerializeField] Vector3 playerScale;
     [SerializeField] float playerHeight = 1f;
-    Vector3 moveDirection;
-    Vector3 wishedMoveDirection;
-    Vector3 slopeMoveDirection;
+    RaycastHit slopeHit;
     Rigidbody rb;
 
 
     [Header("Physics")]
     [SerializeField] float gravityMultiplyer = 2f;
-    
 
 
     [Header("Movement")]
@@ -37,6 +34,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float slidingMoveSpeed = 4f;
     [SerializeField] float airMoveSpeed = 4f;
     [SerializeField] float airStrafe = 16f;
+    [SerializeField] float airStrafeMaxAngle = 120f;
+    Vector3 wishedMoveDirection;
+    Vector3 slopeMoveDirection;
+    Vector3 moveDirection;
 
 
     [Header("Jumping")]
@@ -82,6 +83,11 @@ public class PlayerMovement : MonoBehaviour
     public bool Sloped;
 
     public float angleVariaton;
+
+    [Header("Debug")]
+    public float dbAngle1;
+    public float dbAngle2;
+    public float dbAngledif;
 
     private void Start()
     {
@@ -164,7 +170,12 @@ public class PlayerMovement : MonoBehaviour
         else if (!isGrounded)
         {
             //Air strafing
-            airStrafing();
+            dbAngle1 = utils.GetAngleFromVector(rb.velocity.normalized.x, rb.velocity.normalized.z);
+            dbAngle2 = utils.GetAngleFromVector(moveDirection.normalized.x, moveDirection.normalized.z);
+            dbAngledif = utils.GetAngleDiference(dbAngle1, dbAngle2);
+
+            if (Math.Abs(dbAngledif) < airStrafeMaxAngle)
+                airStrafing();
 
             //Air Movement
             rb.AddForce(moveDirection.normalized * airMoveSpeed, ForceMode.Acceleration);
@@ -276,5 +287,4 @@ public class PlayerMovement : MonoBehaviour
         sprite.text = Stext;
         //sprite.fontSize = (int)scale * 25;
     }
-
 }

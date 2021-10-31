@@ -10,8 +10,10 @@ public class DetectShape: MonoBehaviour
     public Vector3 mousePos;
     public Vector3 lastmousePos;
     public Text shapeDisplay;
+    public Utils utils;
     private Vector3 zeroVector = new Vector3(1, 1, 0);
     private List<float> aux = new List<float>();
+
 
     [Header("Tolerancies")]
     public float minimumDistance = 10f;
@@ -20,12 +22,14 @@ public class DetectShape: MonoBehaviour
     public float startDelay = 4;
     private float delay = 0;
 
+
     [Header("Debugging")]
     public float pain = 0;
     public float angle;
+    public float angleDb1;
+    public float angleDb2;
     public float angleVariaton = 0;
     private float pendent;
-    //private float last_angle = 0;
     private float raise, run;
     public List<float> angles_drawing = new List<float>();
     public List<float> angles_Variaton = new List<float>();
@@ -39,9 +43,7 @@ public class DetectShape: MonoBehaviour
     private float basum = 0;
     private float arekt = 0;
     public float minAcum = 20;
-    //public List<List<float>> listOfShapes = new List<List<float>>();
-    //public int AliA;
-    //public string AliB;
+
 
     [Header("Shape detecting")]
     private bool stopedDrawing;
@@ -50,8 +52,8 @@ public class DetectShape: MonoBehaviour
     public static float angleDiferencie = 0;
 
     //2 sided shapes:
-    private float[] Fall = { 120 };
-    private float[] Leap = { 60 };
+    private float[] Leap = { 120 };
+    private float[] Fall = { 60 };
 
     //3 sided shapes:
     private float[] Triangle = { 120, 120 };
@@ -66,15 +68,6 @@ public class DetectShape: MonoBehaviour
     private float[] Eye = { 45, 45, 120, 45 };
     private float[] Invis = { 90, 90, 90, 90 };
 
-    //public Shape quadrat;
-    //public Shape triangle;
-
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
     void Update()
     {
         if (drawingMenu.isDrawing)
@@ -97,27 +90,14 @@ public class DetectShape: MonoBehaviour
                     run = mousePos.x - lastmousePos.x;
                     raise = mousePos.y - lastmousePos.y;
                     pendent = raise / run;
-                    angle = Mathf.Atan(raise / run) * (180f / 3.1415f);
 
-                    //Going from 90' to 360'
-                    if (run < 0)
-                    {
-                        if (raise < 0)
-                            angle += 180;
-                        else
-                            angle += 180;
-                    }
-                    else if (raise < 0)
-                        angle = 360 + angle;
+                    angle = utils.GetAngleFromVector(raise, run);
 
                     //Angle variation
-                    angleVariaton = angle - arekt;
-                    if (angleVariaton > 180)
-                        angleVariaton -= 360;
-                    if (angleVariaton < -180)
-                        angleVariaton += 360;
+                    angleVariaton = utils.GetAngleDiference(angle, arekt);
+
                     //Angle detection
-                    if (newAngle || Math.Abs(angleVariaton) < tolerance)
+                    if (newAngle || angleVariaton < tolerance)
                     {
                         acum++;
                         asum += angle;
@@ -126,7 +106,7 @@ public class DetectShape: MonoBehaviour
                     }
                     else if (acum > minAcum)
                     {
-                        if (Math.Abs(angleVariaton) > tolerance)
+                        if (angleVariaton > tolerance)
                             angles_drawing.Add(asum / acum);
                         basum = asum;
                         bacum = acum;
@@ -169,13 +149,8 @@ public class DetectShape: MonoBehaviour
     {
         for (int i = 0; i < angles.Count - 1; i++)
         {
-            float angleVar = angles[i + 1] - angles[i];
-            if (angleVar > 180)
-                angleVar -= 360;
-            if (angleVar < -180)
-                angleVar += 360;
-
-            angles_Variaton.Add(Math.Abs(angleVar));
+            float angleVar = utils.GetAngleDiference(angles[i + 1], angles[i]);
+            angles_Variaton.Add(angleVar);
         }
     }
 
@@ -186,273 +161,54 @@ public class DetectShape: MonoBehaviour
         switch (size)
         {
             case 1:
-                angleDiferencie = 0;
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Leap[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    pain = var;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    { 
-                        angleDiferencie += var;
-                        correctShape = 2.1f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
-
+                GetCorrectShapeByAngles(size, Leap, angles_Variaton_Shape, 2.1f);
                 if (correctShape == 2.1f)
                     break;
-
-                angleDiferencie = 0;
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Fall[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    {
-                        angleDiferencie += var;
-                        correctShape = 2.2f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
+                GetCorrectShapeByAngles(size, Fall, angles_Variaton_Shape, 2.2f);
                 break;
 
             case 2:
-                angleDiferencie = 0;
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Triangle[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    {
-                        angleDiferencie += var;
-                        correctShape = 3.1f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
-
+                GetCorrectShapeByAngles(size, Triangle, angles_Variaton_Shape, 3.1f);
                 if (correctShape == 3.1f)
                     break;
-
-                angleDiferencie = 0;
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Break[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    {
-                        angleDiferencie += var;
-                        correctShape = 3.2f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
+                GetCorrectShapeByAngles(size, Break, angles_Variaton_Shape, 3.2f);
                 break;
 
             case 3:
-                angleDiferencie = 0;
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Quadrat[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    {
-                        angleDiferencie += var;
-                        correctShape = 4.1f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
-
+                GetCorrectShapeByAngles(size, Quadrat, angles_Variaton_Shape, 4.1f);
                 if (correctShape == 4.1f)
                     break;
-
-                angleDiferencie = 0;
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Rellotge[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    {
-                        angleDiferencie += var;
-                        correctShape = 4.2f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
+                GetCorrectShapeByAngles(size, Rellotge, angles_Variaton_Shape, 4.2f);
                 break;
 
             case 4:
-                angleDiferencie = 0;
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Pentagon[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    {
-                        angleDiferencie += var;
-                        correctShape = 5.1f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
-
+                GetCorrectShapeByAngles(size, Pentagon, angles_Variaton_Shape, 5.1f);
                 if (correctShape == 5.1f)
                     break;
-
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Eye[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    {
-                        angleDiferencie += var;
-                        correctShape = 5.2f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
-
+                GetCorrectShapeByAngles(size, Eye, angles_Variaton_Shape, 5.2f);
                 if (correctShape == 5.2f)
                     break;
-
-                for (int i1 = 0; i1 < size; i1++)
-                {
-                    float var = angles_Variaton_Shape[i1] - Invis[i1];
-                    if (var > 180)
-                        var -= 360;
-                    if (var < -180)
-                        var += 360;
-
-                    if (Math.Abs(var) < angleTolerance)
-                    {
-                        angleDiferencie += var;
-                        correctShape = 5.3f;
-                    }
-                    else
-                    {
-                        correctShape = 0;
-                        break;
-                    }
-                }
-
+                GetCorrectShapeByAngles(size, Invis, angles_Variaton_Shape, 5.3f);
                 break;
         }
     }
 
-}
-
-
-/*/First angle
-if (angles_drawing.Count == 0)
-{
-delay--;
-if (delay == 0)
-{
-    angles_drawing.Add(angle);
-    last_angle = angle;
-}
-}
-
-//The rest
-else
-{
-angleVariaton = angle - last_angle;
-if (angleVariaton > 180)
-    angleVariaton -= 360;
-if (angleVariaton < -180)
-    angleVariaton += 360;
-
-//angleVariaton = angle - last_angle;
-//angleVariaton = (angleVariaton + 180) % 360 - 180;
-
-if (Math.Abs(angleVariaton) > tolerance)
-{
-    angles_drawing.Add(angle);
-    angles_Variaton.Add(Math.Abs(angleVariaton));
-    last_angle = angle;
-}
-}
-
-void CalculateShapeVariation(List<float> angles_Variaton_Shape)
-{
-for (int i = 0; i < angles_Variaton.Count; i++)
-{
-    float var = angles_Variaton[i] - angles_Variaton_Shape[i];
-    if (var > 180)
-        var -= 360;
-    if (var < -180)
-        var += 360;
-
-    if (Math.Abs(var) < angleTolerance)
+    void GetCorrectShapeByAngles(int size, float[] shape, List<float> aVShape, float shapeId)
     {
-        correctShape = true;
-    }
-    else
-    {
-        correctShape = false;
-        break;
+        angleDiferencie = 0;
+        for (int i1 = 0; i1 < size; i1++)
+        {
+            float var = utils.GetAngleDiference(aVShape[i1], shape[i1]);
+            if (var < angleTolerance)
+            {
+                angleDiferencie += var;
+                correctShape = shapeId;
+            }
+            else
+            {
+                correctShape = 0;
+                break;
+            }
+        }
     }
 }
-}
-*/
