@@ -44,9 +44,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] public float jumpForce = 15f;
     [SerializeField] public float aerialJumpForce = 12.5f;
     [SerializeField] public float maxDoubleJumps = 2f;
+    [SerializeField] public float jumpDelay = 0.2f;
 
-    private bool jumpedLastFrame;
     private float doubleJumpCount = 0f;
+    private bool jumpedLastFrame;
+    private float jumptime = 0;
+
 
 
     [Header("Spells")]
@@ -103,6 +106,7 @@ public class PlayerMovement : MonoBehaviour
         MyInput();
         ControlDrag();
         MovePlayer();
+        JumpUpdate();
         PlayerPhysicsUpdate();
         // drawingMovement();
 
@@ -213,13 +217,20 @@ public class PlayerMovement : MonoBehaviour
         jumpedLastFrame = true;
     }
 
-    void JumpRelease()  
+    void JumpRelease()
     {
-        if (jumpedLastFrame)
+        if (jumpedLastFrame && jumptime > jumpDelay)
+        {
+            jumptime = 0;
             Jump();
+        }
         jumpedLastFrame = false;
     }
-    
+
+    void JumpUpdate()
+    {
+        jumptime += Time.deltaTime;
+    }
 
     void Jump()
     {
