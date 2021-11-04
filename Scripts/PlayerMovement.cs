@@ -43,6 +43,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Jumping")]
     [SerializeField] public float jumpForce = 15f;
     [SerializeField] public float aerialJumpForce = 12.5f;
+    [SerializeField] public float aerialJumpForceDown = 3f;
     [SerializeField] public float maxDoubleJumps = 2f;
     [SerializeField] public float jumpDelay = 0.2f;
 
@@ -242,6 +243,8 @@ public class PlayerMovement : MonoBehaviour
         else if (doubleJumpCount > 0)
         {
             rb.AddForce(transform.up * (aerialJumpForce), ForceMode.Impulse);
+            if (rb.velocity.y < 0)
+                rb.velocity = new Vector3(rb.velocity.x, aerialJumpForceDown, rb.velocity.z);
             doubleJumpCount --;
         }
     }
